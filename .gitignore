@@ -1,5 +1,4 @@
 .idea
 /out
 /sites
-/input.csv
-/output.csv
+*.csv

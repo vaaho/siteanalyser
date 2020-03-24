@@ -2,7 +2,7 @@ package main
 
 import (
 	"siteanalyser/core"
-	"siteanalyser/loader"
+	"siteanalyser/uploader"
 )
 
 // Утилита для загрузки списка сайтов для анализа.
@@ -14,5 +14,5 @@ import (
 func main() {
 	config := core.ParseConfigFromFlags()
 	storage := core.NewSiteStorage(config.SitesDir)
-	loader.Load(config, storage)
+	uploader.Upload(config, storage)
 }

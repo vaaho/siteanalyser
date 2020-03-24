@@ -1,4 +1,4 @@
-package loader
+package uploader
 
 import (
 	"bufio"
@@ -59,7 +59,7 @@ func FilterEmptySites(sites <-chan core.Site, storage *core.SiteStorage) <-chan 
 	return out
 }
 
-func Load(config *core.Config, storage *core.SiteStorage) {
+func Upload(config *core.Config, storage *core.SiteStorage) {
 	domains := LoadDomains(config.InputFile, config.SiteColumn, config.HasHeader)
 
 	sites := core.LoadSitesByDomains(domains, storage)
