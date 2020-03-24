@@ -8,6 +8,7 @@ import (
 func ExtractDomains(input string) []string {
 	domains := make([]string, 0)
 
+	input = strings.ReplaceAll(input, ";", ",")
 	values := strings.Split(input, ",")
 	for _, value := range values {
 		value = strings.TrimSpace(value)

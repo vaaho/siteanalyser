@@ -3,6 +3,7 @@ package core
 import "strings"
 
 const CsvSeparator = ";"
+const CsvSeparatorRune = ';'
 
 func ExtractCsvColumn(line string, colNum int) string {
 	values := strings.Split(line, CsvSeparator)

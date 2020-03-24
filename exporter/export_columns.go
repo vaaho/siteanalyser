@@ -43,8 +43,12 @@ func GetExportColumnsData(columns ExportColumns, analysis *prcy.Analysis) string
 		value := getAnalysisStatus(analysis)
 		if value == "" {
 			switch column {
-			case "SourceType":
-				value = analysis.PublicStatistics.SourceType
+			case "HttpStatus":
+				value = strconv.Itoa(analysis.HttpStatus)
+			case "Error":
+				value = analysis.Error
+			case "Updated":
+				value = extractDate(analysis.PublicStatistics.Updated)
 			case "VisitsDaily":
 				value = strconv.Itoa(analysis.PublicStatistics.VisitsDaily)
 			case "VisitsWeekly":
@@ -66,4 +70,14 @@ func GetExportColumnsData(columns ExportColumns, analysis *prcy.Analysis) string
 
 	result := core.CsvSeparator + strings.Join(data, core.CsvSeparator)
 	return result
+}
+
+// Извлекает дату и даты и времени
+// ex: 2020-03-10T17:38:08+03:00 => 2020-03-10
+func extractDate(value string) string {
+	res := strings.Split(value, "T")
+	if len(res) == 2 {
+		return res[0]
+	}
+	return ""
 }

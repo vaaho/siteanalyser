@@ -2,9 +2,52 @@ package uploader
 
 import (
 	"bufio"
+	"encoding/csv"
+	"io"
 	"os"
 	"siteanalyser/core"
 )
+
+// Загружает список доменов из csv-файла
+func LoadDomains2(sourceFile string, columnNum int, hasColumnsRow bool) <-chan string {
+	file, err := os.Open(sourceFile)
+	core.FailOnError(err)
+	defer file.Close()
+
+	// используем map как set, чтобы сохранять только уникальные домены
+	domains := make(map[string]bool)
+
+	reader := csv.NewReader(file)
+	core.FailOnError(err)
+	reader.Comma = core.CsvSeparatorRune
+
+	if hasColumnsRow {
+		_, err := reader.Read()
+		core.FailOnError(err)
+	}
+
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		core.FailOnError(err)
+
+		lineDomains := core.ExtractDomains(record[columnNum])
+		for _, domain := range lineDomains {
+			domains[domain] = true
+		}
+	}
+
+	// превращаем set в канал
+	out := make(chan string, len(domains))
+	for domain := range domains {
+		out <- domain
+	}
+
+	close(out)
+	return out
+}
 
 // Загружает список доменов из csv-файла
 func LoadDomains(sourceFile string, columnNum int, hasColumnsRow bool) <-chan string {
@@ -60,7 +103,7 @@ func FilterEmptySites(sites <-chan core.Site, storage *core.SiteStorage) <-chan 
 }
 
 func Upload(config *core.Config, storage *core.SiteStorage) {
-	domains := LoadDomains(config.InputFile, config.SiteColumn, config.HasHeader)
+	domains := LoadDomains2(config.InputFile, config.SiteColumn, config.HasHeader)
 
 	sites := core.LoadSitesByDomains(domains, storage)
 	sites = FilterEmptySites(sites, storage)

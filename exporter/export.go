@@ -2,10 +2,8 @@ package exporter
 
 import (
 	"bufio"
-	"log"
 	"os"
 	"siteanalyser/core"
-	"strings"
 )
 
 func ReadInputByLine(sourceFile string) <-chan string {
@@ -48,6 +46,7 @@ func WriteOutputByLine(destFile string, lines <-chan string) <-chan string {
 	return out
 }
 
+/*
 func AppendExportColumns(lines <-chan string, columns ExportColumns, storage *core.SiteStorage, hasColumnsRow bool) <-chan string {
 	out := make(chan string)
 
@@ -59,7 +58,7 @@ func AppendExportColumns(lines <-chan string, columns ExportColumns, storage *co
 			out <- outLine
 		}
 		for line := range lines {
-			outLine := line + GetExportColumnsData(line, columns, storage)
+			outLine := line + GetExportColumnsData(line, columns)
 			//log.Printf("[LINE] " + outLine)
 			out <- outLine
 		}
@@ -68,18 +67,19 @@ func AppendExportColumns(lines <-chan string, columns ExportColumns, storage *co
 
 	return out
 }
+*/
 
 func Export(config *core.Config, storage *core.SiteStorage) {
-	columns := NewExportColumns(config.ExportColumns)
-	if columns.Total == 0 {
-		log.Printf("[EXPORT] Нечего экспортировать")
-		return
-	}
-
-	lines := ReadInputByLine(config.InputFile)
-	lines = AppendExportColumns(lines, columns, storage, !config.NoColumnsRow)
-	lines = WriteOutputByLine(config.OutputFile, lines)
-
-	for _ = range lines {
-	}
+	//columns := NewExportColumns(config.ExportColumns)
+	//if columns.Total == 0 {
+	//	log.Printf("[EXPORT] Нечего экспортировать")
+	//	return
+	//}
+	//
+	//lines := ReadInputByLine(config.InputFile)
+	//lines = AppendExportColumns(lines, columns, storage, !config.NoColumnsRow)
+	//lines = WriteOutputByLine(config.OutputFile, lines)
+	//
+	//for _ = range lines {
+	//}
 }

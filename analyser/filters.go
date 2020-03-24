@@ -1,6 +1,7 @@
 package analyser
 
 import (
+	"net/http"
 	"siteanalyser/core"
 )
 
@@ -9,8 +10,10 @@ func FilterSitesWithoutAnalysis(sites <-chan core.Site) <-chan core.Site {
 
 	go func() {
 		for site := range sites {
-			// нет анализа
-			if site.PrCyAnalysis != nil {
+			// ещё не было попыток запросов
+			if site.PrCyAnalysis == nil ||
+				// если в прошлый раз были лимиты, то повторяем
+				site.PrCyAnalysis.HttpStatus == http.StatusTooManyRequests {
 				out <- site
 			}
 		}

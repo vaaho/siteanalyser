@@ -12,9 +12,10 @@ type RequestAction string
 const (
 	ActionNext   = "next"
 	ActionRepeat = "repeat"
+	ActionStop   = "repeat"
 )
 
-func RequestApiAnalysis(site core.Site, api prcy.Api) (resSite core.Site, action RequestAction) {
+func RequestApiAnalysis(site *core.Site, api prcy.Api) RequestAction {
 	res, err := api.RequestAnalysis(site.Domain)
 	if err != nil {
 		// сетевая ошибка, ошибка api и т.п. => останавливаемся
@@ -23,24 +24,26 @@ func RequestApiAnalysis(site core.Site, api prcy.Api) (resSite core.Site, action
 
 	site.PrCyAnalysis = res
 
-	if res.HttpStatus == http.StatusUnauthorized {
-		// наткнулись на лимиты по api => ждём и ещё раз повторяем
-		log.Printf("[LIMIT] [%s] Error: %s", site.Domain, res.Error)
-		return site, ActionRepeat
+	if res.HttpStatus == http.StatusTooManyRequests {
+		// наткнулись на ограничение => ждём и ещё раз повторяем
+		log.Printf("[WARN] [LIMIT] [%s] Error: %s", site.Domain, res.Error)
+		return ActionRepeat
+	}
+
+	if res.HttpStatus == http.StatusBadRequest ||
+		res.HttpStatus == http.StatusNotFound {
+		// домен плохой или нет анализа по домену => идём дальше
+		log.Printf("[INFO] [%s] Bad domain. Status: %d, Error: %s", site.Domain, res.HttpStatus, res.Error)
+		return ActionNext
 	}
 
 	if res.HttpStatus != http.StatusOK {
-		// ошибка api => сохраняем результат и идём дальше
-		log.Printf("[WARN] [%s] Status: %d, Error: %s", site.Domain, res.HttpStatus, res.Error)
-		return site, ActionNext
+		// непонятная ошибка api => останавливаемся
+		log.Printf("[ERROR] [%s] Status: %d, Error: %s", site.Domain, res.HttpStatus, res.Error)
+		return ActionStop
 	}
 
-	if res.PublicStatistics != nil {
-		log.Printf("[INFO] [%s] Analysis was downloaded, Date: %s", site.Domain, res.PublicStatistics.Updated)
-	} else {
-		log.Printf("[INFO] [%s] No analysys", site.Domain)
-	}
-	return site, ActionNext
+	return ActionNext
 }
 
 func DownloadSitesAnalysis(sites <-chan core.Site, config *core.Config, api prcy.Api) <-chan core.Site {
@@ -49,35 +52,35 @@ func DownloadSitesAnalysis(sites <-chan core.Site, config *core.Config, api prcy
 	go func() {
 		count := 0
 		for site := range sites {
-			resSite, action := RequestApiAnalysis(site, api)
+			action := RequestApiAnalysis(&site, api)
 
 			// что-то пошло не так (например, упёрлись в лимиты) => ждём и повторяем запрос
 			if action == ActionRepeat {
-				sleep(config, 1)
-				resSite, action = RequestApiAnalysis(site, api)
+				sleep(config, 2)
+				action = RequestApiAnalysis(&site, api)
 
 				if action == ActionRepeat {
-					sleep(config, 2)
-					resSite, action = RequestApiAnalysis(site, api)
-
-					if action == ActionRepeat {
-						sleep(config, 10)
-						resSite, action = RequestApiAnalysis(site, api)
-
-						if action == ActionRepeat {
-							// не удалось повторно запросить успешный результат => останавливаемся
-							log.Fatalf("[FATAL] [LIMIT] [%s] Too many retries", site.Domain)
-						}
-					}
+					sleep(config, 4)
+					action = RequestApiAnalysis(&site, api)
 				}
 			}
 
-			// результат получен => идём и идём дальше
-			if action == ActionNext {
-				count += 1
-				out <- resSite
-				sleep(config, 1)
+			// не удалось повторно запросить результат => останавливаемся
+			if action != ActionNext {
+				log.Fatalf("[FATAL] [%s] [%d] Download failed", site.Domain, count+1)
 			}
+
+			// логируем факт скачки анаиза
+			if site.PrCyAnalysis.PublicStatistics != nil {
+				log.Printf("[INFO] [%s] [%d] Downloaded, date: %s", site.Domain, count+1, site.PrCyAnalysis.PublicStatistics.Updated)
+			} else if site.PrCyAnalysis.HttpStatus == http.StatusOK {
+				log.Printf("[INFO] [%s] [%d] No analysis", site.Domain, count+1)
+			}
+
+			// результат получен => ждём и идём дальше
+			count += 1
+			out <- site
+			sleep(config, 1)
 		}
 
 		log.Printf("[FINISHED] Downloaded %d analysys", count)

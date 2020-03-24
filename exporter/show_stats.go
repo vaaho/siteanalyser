@@ -11,28 +11,24 @@ func CalculateStats(site core.Site, stats *Stats) {
 	stats.UnknownVisits++ // если будет статус 200, то вычтем
 
 	// отчёт ещё не скачивался
-	if site.PrCyAnalysis == nil {
-		stats.Status0++
+	if site.PrCyAnalysis == nil || site.PrCyAnalysis.HttpStatus == 0 {
+		stats.NoStatus++
 		return
 	}
 
-	if site.PrCyAnalysis.HttpStatus == 403 {
-		stats.Status403++
-		return
+	// подсчитываем количество плохих статусов
+	status := site.PrCyAnalysis.HttpStatus
+	cnt, ok := stats.Statuses[status]
+	if ok {
+		stats.Statuses[status] = cnt + 1
+	} else {
+		stats.Statuses[status] = 1
 	}
-
-	if site.PrCyAnalysis.HttpStatus == 404 {
-		stats.Status404++
-		return
-	}
-
-	if site.PrCyAnalysis.HttpStatus != 200 {
-		stats.StatusOther++
+	if status != 200 {
 		return
 	}
 
 	// далее site.PrCyAnalysis.HttpStatus == 200
-	stats.Status200++
 	stats.UnknownVisits-- // вычитаем, как обещали
 
 	if site.PrCyAnalysis.PublicStatistics == nil {
@@ -45,7 +41,7 @@ func CalculateStats(site core.Site, stats *Stats) {
 
 	// подсчитываем количество источников
 	source := site.PrCyAnalysis.PublicStatistics.SourceType
-	cnt, ok := stats.Sources[source]
+	cnt, ok = stats.Sources[source]
 	if ok {
 		stats.Sources[source] = cnt + 1
 	} else {
@@ -54,18 +50,17 @@ func CalculateStats(site core.Site, stats *Stats) {
 }
 
 func LogStats(stats *Stats) {
-	data, _ := json.Marshal(stats)
-	log.Printf("%s\n", data)
+	data, _ := json.MarshalIndent(stats, "", "  ")
+	log.Printf("\n%s\n", data)
 }
 
 func ShowStats(config *core.Config, storage *core.SiteStorage) {
 	sites, _ := core.LoadSites(storage)
 
-	var stats Stats
-	stats.Sources = make(map[string]int)
+	stats := NewStats()
 	for site := range sites {
-		CalculateStats(site, &stats)
+		CalculateStats(site, stats)
 	}
 
-	LogStats(&stats)
+	LogStats(stats)
 }
