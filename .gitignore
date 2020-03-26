@@ -1,5 +1,7 @@
 .idea
+/bin
 /out
 /sites
+/data
 *.csv
 *.zip
