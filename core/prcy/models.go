@@ -10,6 +10,10 @@ type Analysis struct {
 	PublicStatistics *PublicStatisticsModel `json:"publicStatistics,omitempty"`
 }
 
+func NewAnalysis() *Analysis {
+	return &Analysis{}
+}
+
 type ErrorModel struct {
 	Error string `json:"error"`
 }

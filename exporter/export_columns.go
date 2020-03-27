@@ -2,7 +2,6 @@ package exporter
 
 import (
 	"log"
-	"siteanalyser/core"
 	"siteanalyser/core/prcy"
 	"strconv"
 	"strings"
@@ -10,14 +9,17 @@ import (
 
 const (
 	UnknownAnalysis = "n/a" // анализ не был скачен или был скачан с ошибками
-	NoAnalysis      = "no"  // нет данных в анализе
+	NoAnalysis      = "-"   // нет данных в анализе
 )
 
 type ExportColumns []string
 
-func GetExportColumnsNames(columns ExportColumns) string {
-	result := core.CsvSeparator + strings.Join(columns, core.CsvSeparator)
-	return result
+func GetExportColumnsNames(columns ExportColumns) []string {
+	return columns
+}
+
+func ParseExportColumns(source string) ExportColumns {
+	return strings.Split(source, ",")
 }
 
 func getAnalysisStatus(analysis *prcy.Analysis) string {
@@ -36,7 +38,7 @@ func getAnalysisStatus(analysis *prcy.Analysis) string {
 	return ""
 }
 
-func GetExportColumnsData(columns ExportColumns, analysis *prcy.Analysis) string {
+func GetExportColumnsData(columns ExportColumns, analysis *prcy.Analysis) []string {
 	var data []string
 
 	for _, column := range columns {
@@ -68,8 +70,7 @@ func GetExportColumnsData(columns ExportColumns, analysis *prcy.Analysis) string
 		data = append(data, value)
 	}
 
-	result := core.CsvSeparator + strings.Join(data, core.CsvSeparator)
-	return result
+	return data
 }
 
 // Извлекает дату и даты и времени

@@ -1,16 +1,19 @@
 package core
 
-import "flag"
+import (
+	"flag"
+)
 
 type Config struct {
-	InputFile   string
-	OutputFile  string
-	SitesDir    string
-	HasHeader   bool
-	SiteColumn  int
-	PrCyToken   string // api key
-	PrCyDelay   int    // задержка между запросами в милисекундах
-	UpdateCount int
+	InputFile     string
+	OutputFile    string
+	SitesDir      string
+	HasHeader     bool
+	SiteColumn    int
+	PrCyToken     string // api key
+	PrCyDelay     int    // задержка между запросами в милисекундах
+	UpdateCount   int
+	ExportColumns string
 }
 
 // Считыает входные аргументы для программы
@@ -25,6 +28,7 @@ func ParseConfigFromFlags() *Config {
 	flag.StringVar(&config.PrCyToken, "prcy-token", "", "Ключ доступа к API PR-CY")
 	flag.IntVar(&config.PrCyDelay, "prcy-delay", 1000, "Задержка между запросами к API PR-CY в милисекундах")
 	flag.IntVar(&config.UpdateCount, "update", 0, "Если указан, то запускает апдейт сатов, для которых не существует отчёта")
+	flag.StringVar(&config.ExportColumns, "export", "VisitsMonthly,PageViewsMonthly,Updated", "Список колонок для экспорта")
 
 	flag.Parse()
 
