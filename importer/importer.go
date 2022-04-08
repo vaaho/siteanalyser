@@ -1,4 +1,4 @@
-package uploader
+package importer
 
 import (
 	"encoding/csv"
@@ -67,7 +67,7 @@ func FilterEmptySites(sites <-chan core.Site, storage *core.SiteStorage) <-chan 
 	return out
 }
 
-func Upload(config *core.Config, storage *core.SiteStorage) {
+func Import(config *core.Config, storage *core.SiteStorage) {
 	log.Printf("[INFO] Start loading domains from %s to %s", config.InputFile, config.SitesDir)
 
 	domains, domainsCount, rowsCount := LoadDomains(config.InputFile, config.SiteColumn, config.HasHeader)

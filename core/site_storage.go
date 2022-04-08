@@ -44,6 +44,18 @@ func (s *SiteStorage) ensureDir() {
 	}
 }
 
+// Проверяет является ли имя домена валидным для хранилища
+func (s *SiteStorage) IsValid(domain string) bool {
+	path := s.siteFilePath(domain)
+
+	_, err := os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		return false
+	}
+
+	return true
+}
+
 // Загружает сайт из хранилища по его домену. Если сайта в хранилище нет, то возвращает пустой сайт
 func (s *SiteStorage) Load(domain string) Site {
 	path := s.siteFilePath(domain)
@@ -60,6 +72,13 @@ func (s *SiteStorage) Load(domain string) Site {
 
 	bytes, err := ioutil.ReadAll(file)
 	FailOnError(err)
+
+	// FIX: Иногда в файлах хранилища попадаются одни нули. Долго не разбирался почему так, сделал обработчик.
+	//      Считаю, что файл с сайтом просто как новый.
+	if len(bytes) > 0 && bytes[0] == 0 {
+		site := NewSite(domain)
+		return site
+	}
 
 	var site Site
 	err = json.Unmarshal(bytes, &site)

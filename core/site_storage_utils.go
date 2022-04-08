@@ -23,8 +23,10 @@ func LoadSitesByDomains(domains <-chan string, storage *SiteStorage) <-chan Site
 
 	go func() {
 		for domain := range domains {
-			site := storage.Load(domain)
-			out <- site
+			if storage.IsValid(domain) {
+				site := storage.Load(domain)
+				out <- site
+			}
 		}
 		close(out)
 	}()
