@@ -9,7 +9,7 @@ siteanalyser.exe import -input=sites.csv -column=0
 
 2) Затем скачиваем статистику PR-CY. Количество скачиваний ограничено лимитами PR-CY API. Лучше всего эту команду запускать по cron'у раз в час.
 ```
-siteanalyser.exe analyse -prcy-token=5VlB5YUprVlF1MHk0dHgvM3lnTnRMdz0
+siteanalyser.exe analyse -prcy-token=<api-token>
 ```
 
 3) В конце выгружаем статистику в новые колонки обратно в файл:
