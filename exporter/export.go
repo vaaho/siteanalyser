@@ -109,17 +109,17 @@ func AppendExportColumns(rows <-chan []string, domainColumnNum int, columns Expo
 
 			// загружаем статистику и скалдываем её по всем сайтам
 			for _, domain := range domains {
-				site := storage.Load(domain)
-				accumulateStatistics(analysis, site.PrCyAnalysis)
+				if storage.IsValid(domain) {
+					site := storage.Load(domain)
+					accumulateStatistics(analysis, site.PrCyAnalysis)
+				}
 			}
 
 			// формируем список дополнительных колонок
 			data := GetExportColumnsData(columns, analysis)
 
 			// расширяем строку новыми колокнами с конца
-			for _, item := range data {
-				row = append(row, item)
-			}
+			row = append(row, data...)
 
 			out <- row
 		}

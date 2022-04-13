@@ -8,8 +8,10 @@ func LoadSites(storage *SiteStorage) (<-chan Site, int) {
 
 	go func() {
 		for _, domain := range domains {
-			site := storage.Load(domain)
-			out <- site
+			if storage.IsValid(domain) {
+				site := storage.Load(domain)
+				out <- site
+			}
 		}
 		close(out)
 	}()
